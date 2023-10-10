@@ -1,7 +1,8 @@
+#!/bin/sh
 make
 if [ ! -e text8 ]; then
-  wget http://mattmahoney.net/dc/text8.zip -O text8.gz
-  gzip -d text8.gz -f
+  wget -Nc http://mattmahoney.net/dc/text8.zip -O text8.gz
+  gzip -d text8.gz
 fi
 echo ---------------------------------------------------------------------------------------------------
 echo Note that for the word analogy to perform well, the model should be trained on much larger data set

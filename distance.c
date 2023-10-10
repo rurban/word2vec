@@ -16,22 +16,24 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdint.h>
 
-const long long max_size = 2000;         // max length of strings
-const long long N = 40;                  // number of closest words that will be shown
-const long long max_w = 50;              // max length of vocabulary entries
+#define MAX_SIZE INT64_C(2000)         // max length of strings
+#define N        INT64_C(40)           // number of closest words that will be shown
+#define MAX_W    INT64_C(50)           // max length of vocabulary entries
 
 int main(int argc, char **argv) {
   FILE *f;
-  char st1[max_size];
+  char st1[MAX_SIZE];
   char *bestw[N];
-  char file_name[max_size], st[100][max_size];
-  float dist, len, bestd[N], vec[max_size];
+  char file_name[MAX_SIZE], st[100][MAX_SIZE];
+  float dist, len, bestd[N], vec[MAX_SIZE];
   long long words, size, a, b, c, d, cn, bi[100];
   float *M;
   char *vocab;
   if (argc < 2) {
-    printf("Usage: ./distance <FILE>\nwhere FILE contains word projections in the BINARY FORMAT\n");
+    printf("Usage: ./distance <FILE>\n"
+           "where FILE contains word projections in the BINARY FORMAT\n");
     return 0;
   }
   strcpy(file_name, argv[1]);
@@ -42,8 +44,8 @@ int main(int argc, char **argv) {
   }
   fscanf(f, "%lld", &words);
   fscanf(f, "%lld", &size);
-  vocab = (char *)malloc((long long)words * max_w * sizeof(char));
-  for (a = 0; a < N; a++) bestw[a] = (char *)malloc(max_size * sizeof(char));
+  vocab = (char *)malloc((long long)words * MAX_W * sizeof(char));
+  for (a = 0; a < N; a++) bestw[a] = (char *)malloc(MAX_SIZE * sizeof(char));
   M = (float *)malloc((long long)words * (long long)size * sizeof(float));
   if (M == NULL) {
     printf("Cannot allocate memory: %lld MB    %lld  %lld\n", (long long)words * size * sizeof(float) / 1048576, words, size);
@@ -52,11 +54,11 @@ int main(int argc, char **argv) {
   for (b = 0; b < words; b++) {
     a = 0;
     while (1) {
-      vocab[b * max_w + a] = fgetc(f);
-      if (feof(f) || (vocab[b * max_w + a] == ' ')) break;
-      if ((a < max_w) && (vocab[b * max_w + a] != '\n')) a++;
+      vocab[b * MAX_W + a] = fgetc(f);
+      if (feof(f) || (vocab[b * MAX_W + a] == ' ')) break;
+      if ((a < MAX_W) && (vocab[b * MAX_W + a] != '\n')) a++;
     }
-    vocab[b * max_w + a] = 0;
+    vocab[b * MAX_W + a] = 0;
     for (a = 0; a < size; a++) fread(&M[a + b * size], sizeof(float), 1, f);
     len = 0;
     for (a = 0; a < size; a++) len += M[a + b * size] * M[a + b * size];
@@ -71,7 +73,7 @@ int main(int argc, char **argv) {
     a = 0;
     while (1) {
       st1[a] = fgetc(stdin);
-      if ((st1[a] == '\n') || (a >= max_size - 1)) {
+      if ((st1[a] == '\n') || (a >= MAX_SIZE - 1)) {
         st1[a] = 0;
         break;
       }
@@ -95,7 +97,7 @@ int main(int argc, char **argv) {
     }
     cn++;
     for (a = 0; a < cn; a++) {
-      for (b = 0; b < words; b++) if (!strcmp(&vocab[b * max_w], st[a])) break;
+      for (b = 0; b < words; b++) if (!strcmp(&vocab[b * MAX_W], st[a])) break;
       if (b == words) b = -1;
       bi[a] = b;
       printf("\nWord: %s  Position in vocabulary: %lld\n", st[a], bi[a]);
@@ -130,7 +132,7 @@ int main(int argc, char **argv) {
             strcpy(bestw[d], bestw[d - 1]);
           }
           bestd[a] = dist;
-          strcpy(bestw[a], &vocab[c * max_w]);
+          strcpy(bestw[a], &vocab[c * MAX_W]);
           break;
         }
       }

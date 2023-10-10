@@ -17,23 +17,25 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <ctype.h>
 
-const long long max_size = 2000;         // max length of strings
-const long long N = 1;                   // number of closest words
-const long long max_w = 50;              // max length of vocabulary entries
+#define MAX_SIZE INT64_C(2000)         // max length of strings
+#define N        INT64_C(1)            // number of closest words
+#define MAX_W    INT64_C(50)           // max length of vocabulary entries
 
 int main(int argc, char **argv)
 {
   FILE *f;
-  char st1[max_size], st2[max_size], st3[max_size], st4[max_size], bestw[N][max_size], file_name[max_size];
-  float dist, len, bestd[N], vec[max_size];
+  char st1[MAX_SIZE], st2[MAX_SIZE], st3[MAX_SIZE], st4[MAX_SIZE], bestw[N][MAX_SIZE], file_name[MAX_SIZE];
+  float dist, len, bestd[N], vec[MAX_SIZE];
   long long words, size, a, b, c, d, b1, b2, b3, threshold = 0;
   float *M;
   char *vocab;
   int TCN, CCN = 0, TACN = 0, CACN = 0, SECN = 0, SYCN = 0, SEAC = 0, SYAC = 0, QID = 0, TQ = 0, TQS = 0;
   if (argc < 2) {
-    printf("Usage: ./compute-accuracy <FILE> <threshold>\nwhere FILE contains word projections, and threshold is used to reduce vocabulary of the model for fast approximate evaluation (0 = off, otherwise typical value is 30000)\n");
+    printf("Usage: ./compute-accuracy <FILE> <threshold>\n"
+           "where FILE contains word projections, and threshold is used to reduce vocabulary of the model for fast approximate evaluation (0 = off, otherwise typical value is 30000)\n");
     return 0;
   }
   strcpy(file_name, argv[1]);
@@ -46,7 +48,7 @@ int main(int argc, char **argv)
   fscanf(f, "%lld", &words);
   if (threshold) if (words > threshold) words = threshold;
   fscanf(f, "%lld", &size);
-  vocab = (char *)malloc(words * max_w * sizeof(char));
+  vocab = (char *)malloc(words * MAX_W * sizeof(char));
   M = (float *)malloc(words * size * sizeof(float));
   if (M == NULL) {
     printf("Cannot allocate memory: %lld MB\n", words * size * sizeof(float) / 1048576);
@@ -55,12 +57,12 @@ int main(int argc, char **argv)
   for (b = 0; b < words; b++) {
     a = 0;
     while (1) {
-      vocab[b * max_w + a] = fgetc(f);
-      if (feof(f) || (vocab[b * max_w + a] == ' ')) break;
-      if ((a < max_w) && (vocab[b * max_w + a] != '\n')) a++;
+      vocab[b * MAX_W + a] = fgetc(f);
+      if (feof(f) || (vocab[b * MAX_W + a] == ' ')) break;
+      if ((a < MAX_W) && (vocab[b * MAX_W + a] != '\n')) a++;
     }
-    vocab[b * max_w + a] = 0;
-    for (a = 0; a < max_w; a++) vocab[b * max_w + a] = toupper(vocab[b * max_w + a]);
+    vocab[b * MAX_W + a] = 0;
+    for (a = 0; a < MAX_W; a++) vocab[b * MAX_W + a] = toupper(vocab[b * MAX_W + a]);
     for (a = 0; a < size; a++) fread(&M[a + b * size], sizeof(float), 1, f);
     len = 0;
     for (a = 0; a < size; a++) len += M[a + b * size] * M[a + b * size];
@@ -73,7 +75,7 @@ int main(int argc, char **argv)
     for (a = 0; a < N; a++) bestd[a] = 0;
     for (a = 0; a < N; a++) bestw[a][0] = 0;
     scanf("%s", st1);
-    for (a = 0; a < strlen(st1); a++) st1[a] = toupper(st1[a]);
+    for (a = 0; a < (long long)strlen(st1); a++) st1[a] = toupper(st1[a]);
     if ((!strcmp(st1, ":")) || (!strcmp(st1, "EXIT")) || feof(stdin)) {
       if (TCN == 0) TCN = 1;
       if (QID != 0) {
@@ -90,16 +92,16 @@ int main(int argc, char **argv)
     }
     if (!strcmp(st1, "EXIT")) break;
     scanf("%s", st2);
-    for (a = 0; a < strlen(st2); a++) st2[a] = toupper(st2[a]);
+    for (a = 0; a < (long long)strlen(st2); a++) st2[a] = toupper(st2[a]);
     scanf("%s", st3);
-    for (a = 0; a<strlen(st3); a++) st3[a] = toupper(st3[a]);
+    for (a = 0; a < (long long)strlen(st3); a++) st3[a] = toupper(st3[a]);
     scanf("%s", st4);
-    for (a = 0; a < strlen(st4); a++) st4[a] = toupper(st4[a]);
-    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * max_w], st1)) break;
+    for (a = 0; a < (long long)strlen(st4); a++) st4[a] = toupper(st4[a]);
+    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * MAX_W], st1)) break;
     b1 = b;
-    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * max_w], st2)) break;
+    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * MAX_W], st2)) break;
     b2 = b;
-    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * max_w], st3)) break;
+    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * MAX_W], st3)) break;
     b3 = b;
     for (a = 0; a < N; a++) bestd[a] = 0;
     for (a = 0; a < N; a++) bestw[a][0] = 0;
@@ -107,7 +109,7 @@ int main(int argc, char **argv)
     if (b1 == words) continue;
     if (b2 == words) continue;
     if (b3 == words) continue;
-    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * max_w], st4)) break;
+    for (b = 0; b < words; b++) if (!strcmp(&vocab[b * MAX_W], st4)) break;
     if (b == words) continue;
     for (a = 0; a < size; a++) vec[a] = (M[a + b2 * size] - M[a + b1 * size]) + M[a + b3 * size];
     TQS++;
@@ -124,7 +126,7 @@ int main(int argc, char **argv)
             strcpy(bestw[d], bestw[d - 1]);
           }
           bestd[a] = dist;
-          strcpy(bestw[a], &vocab[c * max_w]);
+          strcpy(bestw[a], &vocab[c * MAX_W]);
           break;
         }
       }

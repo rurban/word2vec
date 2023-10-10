@@ -1,0 +1,14 @@
+/compute-accuracy
+/distance
+/word-analogy
+/word2phrase
+/word2vec
+
+/text8
+/news.2012.en.shuffled
+/news.2013.en.shuffled
+/1-billion-word-language-modeling-benchmark-r13output.tar.gz
+/1-billion-word-language-modeling-benchmark-r13output
+/UMBC-webbase-corpus.tar.gz
+/webbase_all
+/enwiki-latest-pages-articles.xml.bz2

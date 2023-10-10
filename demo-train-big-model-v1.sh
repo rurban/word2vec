@@ -1,3 +1,4 @@
+#!/bin/sh
 ###############################################################################################
 #
 # Script for training good word and phrase vector model using public corpora, version 1.0.
@@ -16,30 +17,39 @@ normalize_text() {
   -e 's/«/ /g' | tr 0-9 " "
 }
 
-mkdir word2vec
+git clone https://github.com/rurban/word2vec
 cd word2vec
 
-wget http://www.statmt.org/wmt14/training-monolingual-news-crawl/news.2012.en.shuffled.gz
-wget http://www.statmt.org/wmt14/training-monolingual-news-crawl/news.2013.en.shuffled.gz
-gzip -d news.2012.en.shuffled.gz
-gzip -d news.2013.en.shuffled.gz
-normalize_text < news.2012.en.shuffled > data.txt
-normalize_text < news.2013.en.shuffled >> data.txt
+if [ ! -e news.2012.en.shuffled ]; then
+  wget -Nc http://www.statmt.org/wmt14/training-monolingual-news-crawl/news.2012.en.shuffled.gz
+  gzip -d news.2012.en.shuffled.gz
+  normalize_text < news.2012.en.shuffled > data.txt
+fi
+if [ ! -e news.2013.en.shuffled ]; then
+  wget -Nc http://www.statmt.org/wmt14/training-monolingual-news-crawl/news.2013.en.shuffled.gz
+  normalize_text < news.2013.en.shuffled >> data.txt
+  gzip -d news.2013.en.shuffled.gz
+fi
 
-wget http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
-tar -xvf 1-billion-word-language-modeling-benchmark-r13output.tar.gz
-for i in `ls 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled`; do
-  normalize_text < 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/$i >> data.txt
-done
+if [ ! -d 1-billion-word-language-modeling-benchmark-r13output ]; then
+  wget -Nc http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
+  tar -xvf 1-billion-word-language-modeling-benchmark-r13output.tar.gz
+  for i in `ls 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled`; do
+    normalize_text < 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/$i >> data.txt
+  done
+fi
 
-wget http://ebiquity.umbc.edu/redirect/to/resource/id/351/UMBC-webbase-corpus
-tar -zxvf umbc_webbase_corpus.tar.gz webbase_all/*.txt
-for i in `ls webbase_all`; do
-  normalize_text < webbase_all/$i >> data.txt
-done
+if [ ! -d webbase_all ]; then
+  wget -Nc http://ebiquity.umbc.edu/redirect/to/resource/id/351/UMBC-webbase-corpus
+  tar -zxvf umbc_webbase_corpus.tar.gz webbase_all/*.txt
+  for i in `ls webbase_all`; do
+    normalize_text < webbase_all/$i >> data.txt
+  done
+fi
 
-wget http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
-bzip2 -c -d enwiki-latest-pages-articles.xml.bz2 | awk '{print tolower($0);}' | perl -e '
+if [ ! -e enwiki-latest-pages-articles.xml.bz2 ]; then
+  wget -Nc http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
+  bzip2 -c -d enwiki-latest-pages-articles.xml.bz2 | awk '{print tolower($0);}' | perl -e '
 # Program to filter Wikipedia XML dumps to "clean" text consisting only of lowercase
 # letters (a-z, converted from A-Z), and spaces (never consecutive)...
 # All other characters are converted to spaces.  Only text which normally appears.
@@ -84,15 +94,9 @@ while (<>) {
   }
 }
 ' | normalize_text | awk '{if (NF>1) print;}' >> data.txt
+fi
 
-wget http://word2vec.googlecode.com/svn/trunk/word2vec.c
-wget http://word2vec.googlecode.com/svn/trunk/word2phrase.c
-wget http://word2vec.googlecode.com/svn/trunk/compute-accuracy.c
-wget http://word2vec.googlecode.com/svn/trunk/questions-words.txt
-wget http://word2vec.googlecode.com/svn/trunk/questions-phrases.txt
-gcc word2vec.c -o word2vec -lm -pthread -O3 -march=native -funroll-loops
-gcc word2phrase.c -o word2phrase -lm -pthread -O3 -march=native -funroll-loops
-gcc compute-accuracy.c -o compute-accuracy -lm -pthread -O3 -march=native -funroll-loops
+make
 ./word2phrase -train data.txt -output data-phrase.txt -threshold 200 -debug 2
 ./word2phrase -train data-phrase.txt -output data-phrase2.txt -threshold 100 -debug 2
 ./word2vec -train data-phrase2.txt -output vectors.bin -cbow 1 -size 500 -window 10 -negative 10 -hs 0 -sample 1e-5 -threads 40 -binary 1 -iter 3 -min-count 10

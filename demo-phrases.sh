@@ -1,7 +1,8 @@
+#!/bin/sh
 make
 if [ ! -e news.2012.en.shuffled ]; then
-  wget http://www.statmt.org/wmt14/training-monolingual-news-crawl/news.2012.en.shuffled.gz
-  gzip -d news.2012.en.shuffled.gz -f
+  wget -Nc http://www.statmt.org/wmt14/training-monolingual-news-crawl/news.2012.en.shuffled.gz -O news.2012.en.shuffled.gz
+  gzip -d news.2012.en.shuffled.gz
 fi
 sed -e "s/’/'/g" -e "s/′/'/g" -e "s/''/ /g" < news.2012.en.shuffled | tr -c "A-Za-z'_ \n" " " > news.2012.en.shuffled-norm0
 time ./word2phrase -train news.2012.en.shuffled-norm0 -output news.2012.en.shuffled-norm0-phrase0 -threshold 200 -debug 2
