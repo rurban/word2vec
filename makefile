@@ -1,6 +1,14 @@
+PROCESSOR := $(shell uname -p)
 CC = gcc
-#Using -Ofast instead of -O3 might result in faster code, but is supported only by newer GCC versions
-CFLAGS = -lm -pthread -O3 -march=native -W -Wall -Wextra -funroll-loops -Wno-unused-result
+# Using -Ofast instead of -O3 might result in faster code,
+# but is supported only by newer GCC versions
+CFLAGS = -lm -pthread -O3 -W -Wall -Wextra -funroll-loops -Wno-unused-result
+ifeq ($(PROCESSOR),x86_64)
+  CFLAGS += -march=native
+endif
+ifeq ($(ASAN),1)
+  CFLAGS += -fsanitize=address,undefined
+endif
 
 all: word2vec word2phrase distance word-analogy compute-accuracy
 
